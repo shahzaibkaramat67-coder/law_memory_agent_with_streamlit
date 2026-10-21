@@ -1,31 +1,22 @@
-# from langchain.agents import create_agent
-from mian import get_model
+from collections.abc import Mapping, Sequence
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+
 from memorySystem import memoryHendler
-from langchain.messages import HumanMessage, AIMessage
-
-model = get_model()
 
 
-memory = memoryHendler()
+def build_conversation(
+    history: Sequence[Mapping[str, str]],
+    question: str,
+    jurisdiction: str = "",
+) -> list[BaseMessage]:
+    messages = memoryHendler(jurisdiction)
 
-print("the model is here", model)
+    for turn in history:
+        if turn["role"] == "user":
+            messages.append(HumanMessage(content=turn["content"]))
+        elif turn["role"] == "assistant":
+            messages.append(AIMessage(content=turn["content"]))
 
-# messages = [("assistant", "you are a help full asssistent in the domain of the law")]
-
-
-def historyShow():
-    print(memory)
-
-
-# agent = create_agent(model=model, message=message)
-
-while True:
-    user_input = input("Ask Any Question About Law : ")
-    if user_input == "Exit" or user_input == "exit":
-        historyShow()
-        break
-    memory.append(HumanMessage(content=user_input))
-    response = model.invoke(memory)
-    result = response.content
-    print("response", result)
-    memory.append(AIMessage(content=result))
+    messages.append(HumanMessage(content=question))
+    return messages
